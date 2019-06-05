@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "321310649953",
+    "firebase_url": "https://rayc-2498c.firebaseio.com",
+    "project_id": "rayc-2498c",
+    "storage_bucket": "rayc-2498c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:321310649953:android:910a9f5b7fbb3f06",
+        "android_client_info": {
+          "package_name": "com.rayc.conserteaqui"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "321310649953-63bdodb8m9ju9jiic1ocmmf49jqdjaq8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCu5-hGaH3bClnXug0dnva9hNIfUf5oLNk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "321310649953-63bdodb8m9ju9jiic1ocmmf49jqdjaq8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
