@@ -1,86 +1,37 @@
 import React from "react";
-import { StyleSheet, Text, View, TextInput, ScrollView } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  ScrollView,
+  ActivityIndicator,
+  TouchableOpacity,
+  AsyncStorage
+} from "react-native";
 import {
   Image,
   Header,
   Button,
   Rating,
-  AirbnbRating
+  AirbnbRating,
+  Overlay
 } from "react-native-elements";
 import SearchBar from "react-native-dynamic-search-bar";
+import { http } from "../../Service/auth";
+
 // import { Container } from './styles';
-const listaLimpa = [
-  {
-    nome: "Seu Ze",
-    especialidade: "Eletricista",
-    rating: 3
-  },
-  {
-    nome: "Assis",
-    especialidade: "Pedreiro",
-    rating: 1
-  },
-  {
-    nome: "Umberto",
-    especialidade: "Ecanador",
-    rating: 4
-  },
-  {
-    nome: "Joao",
-    especialidade: "Pintor",
-    rating: 5
-  },
-  {
-    nome: "Gabriel",
-    especialidade: "Carpiteiro",
-    rating: 2
-  },
-  {
-    nome: "Marcos",
-    especialidade: "Eletricista",
-    rating: 4
-  },
-  {
-    nome: "Pinturas S/A",
-    especialidade: "Pintor",
-    rating: 4
-  },
-  {
-    nome: "Eletricista S/A",
-    especialidade: "Eletricista",
-    rating: 5
-  },
-  {
-    nome: "Marcos",
-    especialidade: "Eletricista",
-    rating: 1
-  },
-  {
-    nome: "Gabriel",
-    especialidade: "Pedreiro",
-    rating: 4
-  },
-  {
-    nome: "Victor",
-    especialidade: "Pedreiro",
-    rating: 2
-  },
-  {
-    nome: "Felipe",
-    especialidade: "Pedreiro",
-    rating: 2
-  },
-  {
-    nome: "Damiao",
-    especialidade: "Pintor",
-    rating: 4
-  }
-];
+
 export default class Principal extends React.Component {
   state = {
     search: "",
     listaUsuarios: [],
-    listaFiltrada: []
+    listaFiltrada: [],
+    loading: false,
+    isVisible: false,
+    prestador: [],
+    msg: "",
+    nivel: ""
   };
 
   updateIndex(selectedIndex) {
@@ -88,20 +39,62 @@ export default class Principal extends React.Component {
   }
 
   componentDidMount = async () => {
-    await this.setState({
-      listaUsuarios: listaLimpa,
-      listaFiltrada: listaLimpa
-    });
+    const nivel = await AsyncStorage.getItem("nivel");
+    this.setState({ nivel });
+    this.pegarApi();
+  };
+
+  pegarApi = async () => {
+    try {
+      const response = await http.get("listaFornecedor");
+
+      if (response.status === 201) {
+        await this.setState({
+          listaUsuarios: response.data.usuario,
+          listaFiltrada: response.data.usuario,
+          loading: true
+        });
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  exibirModal = async item => {
+    await this.setState({ prestador: item });
+    if (this.state.nivel === "usuario") {
+      await this.setState({ isVisible: true });
+    }
   };
 
   updateSearch = search => {
     this.setState({ search });
   };
 
+  enviarmensagem = async () => {
+    console.log("oi");
+    if (this.state.msg !== "") {
+      console.log("oi2");
+      const response = await http.post("chat/usuario/enviar", {
+        fornecedor_id: this.state.prestador.id,
+        msg: this.state.msg
+      });
+      console.log(response.data);
+      if (response.status === 201) {
+        alert("Mensagem enviada!");
+        this.setState({ isVisible: false });
+      } else {
+        alert("Mensagem nao enviada");
+      }
+    } else {
+      alert("Insira uma mensagem !");
+    }
+  };
+
   filterList = text => {
     let lista = [];
     lista = this.state.listaUsuarios.filter(item => {
-      return item.nome.toLowerCase().indexOf(text.toLowerCase()) >= 0;
+      return item.especialidade.toLowerCase().indexOf(text.toLowerCase()) >= 0;
     });
 
     this.setState({ listaFiltrada: lista });
@@ -129,33 +122,93 @@ export default class Principal extends React.Component {
             this.filterList("");
           }}
         />
+        <Overlay
+          isVisible={this.state.isVisible}
+          windowBackgroundColor="rgba(255, 255, 255, .5)"
+          overlayBackgroundColor="#fff"
+          width="auto"
+          height="auto"
+        >
+          <View
+            style={{
+              backgroundColor: "#fff",
+              padding: 25,
+              borderRadius: 20,
+              marginTop: 30,
+              minWidth: "80%"
+            }}
+          >
+            <Text>Enviar mensagem para: {this.state.prestador.name}</Text>
+            <TextInput
+              style={styles.inputLogin}
+              placeholder="Mensagem"
+              multiline={true}
+              numberOfLines={4}
+              onChangeText={text => this.setState({ msg: text })}
+              value={this.state.msg}
+            />
+            <Button
+              buttonStyle={{
+                marginTop: 20,
+                borderRadius: 10,
+                backgroundColor: "#FF6700",
+                height: 50
+              }}
+              titleStyle={{ fontSize: 21 }}
+              title="Enviar Mensagem"
+              onPress={() => this.enviarmensagem()}
+            />
+            <Button
+              buttonStyle={{
+                marginTop: 20,
+                borderRadius: 10,
+                borderColor: "#FF6700",
+                height: 50,
+                borderWidth: 1
+              }}
+              titleStyle={{ fontSize: 21, color: "#FF6700" }}
+              type="outline"
+              title="Cancelar"
+              onPress={() => this.setState({ isVisible: false })}
+            />
+          </View>
+        </Overlay>
 
         <ScrollView contentContainerStyle={styles.contentContainer}>
-          {this.state.listaFiltrada.map(item => {
-            return (
-              <View style={styles.cardPrincipal}>
-                <View style={{ width: "60%" }}>
-                  <Text style={styles.textoCard}>{item.nome}</Text>
-                  <Text style={styles.textoCard2}>{item.especialidade}</Text>
-                </View>
-                <View style={{ position: "absolute", right: 20 }}>
-                  <AirbnbRating
-                    count={5}
-                    readonly
-                    reviews={[
-                      "Ruim",
-                      "Medio",
-                      "Otimo",
-                      "Muito Bom",
-                      "Exelente"
-                    ]}
-                    defaultRating={item.rating}
-                    size={20}
-                  />
-                </View>
-              </View>
-            );
-          })}
+          {!this.state.loading && (
+            <ActivityIndicator size="large" color="#FF6700" />
+          )}
+          {this.state.loading &&
+            this.state.listaFiltrada.map(item => {
+              rating = Math.floor(Math.random() * 6);
+              return (
+                <TouchableOpacity
+                  key={item.id}
+                  style={styles.cardPrincipal}
+                  onPress={() => this.exibirModal(item)}
+                >
+                  <View style={{ width: "60%" }}>
+                    <Text style={styles.textoCard}>{item.name}</Text>
+                    <Text style={styles.textoCard2}>{item.especialidade}</Text>
+                  </View>
+                  <View style={{ position: "absolute", right: 20 }}>
+                    <AirbnbRating
+                      count={5}
+                      readonly
+                      reviews={[
+                        "Ruim",
+                        "Medio",
+                        "Otimo",
+                        "Muito Bom",
+                        "Exelente"
+                      ]}
+                      defaultRating={item.rating}
+                      size={20}
+                    />
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
         </ScrollView>
         <View style={{ height: "10%", flexDirection: "row" }}>
           <View style={{ width: "33.33%" }}>
@@ -197,7 +250,7 @@ export default class Principal extends React.Component {
               }}
               titleStyle={{ fontSize: 21 }}
               title="Chat"
-              onPress={() => console.log("")}
+              onPress={() => this.props.navigation.navigate("Chat")}
             />
           </View>
           <View style={{ width: "33.33%" }}>
@@ -245,12 +298,21 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     flexDirection: "column"
   },
+  inputLogin: {
+    borderColor: "gray",
+    borderWidth: 1,
+    marginTop: 20,
+    textAlign: "center",
+    borderRadius: 10,
+    fontSize: 21,
+    borderColor: "#FF6700",
+    borderWidth: 1
+  },
   textoCard: {
     paddingTop: 4,
     paddingLeft: 4,
     color: "#fff",
     fontSize: 26,
-    fontWeith: "bold",
     textDecorationLine: "underline",
     textDecorationStyle: "solid",
     textDecorationColor: "#000",
@@ -261,7 +323,6 @@ const styles = StyleSheet.create({
   textoCard2: {
     textAlign: "center",
     color: "#fff",
-    fontSize: 22,
-    fontWeith: "bold"
+    fontSize: 22
   }
 });

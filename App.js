@@ -6,13 +6,19 @@ import {
   TextInput,
   KeyboardAvoidingView
 } from "react-native";
-import { createStackNavigator, createAppContainer } from "react-navigation";
+import {
+  createStackNavigator,
+  createAppContainer,
+  createSwitchNavigator
+} from "react-navigation";
 import { Image, Button } from "react-native-elements";
 
+import ChatAberto from "./Views/Chat/ChatAberto";
 import Principal from "./Views/Principal";
-import Firebase from "firebase";
 import Loading from "./Views/Loading";
 import Login from "./Views/Login";
+import CriarConta from "./Views/CriaConta";
+import Chat from "./Views/Chat";
 
 class App extends React.Component {
   render() {
@@ -40,10 +46,14 @@ const styles = StyleSheet.create({
   }
 });
 
-const AppNavigator = createStackNavigator(
+const AppNavigator = createSwitchNavigator(
   {
     Home: Loading,
-    Principal: Principal
+    Principal: Principal,
+    login: Login,
+    Criar: CriarConta,
+    Chat: Chat,
+    ChatAberto: ChatAberto
   },
   {
     initialRouteName: "Home",

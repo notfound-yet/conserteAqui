@@ -1,11 +1,17 @@
 import React, { Component } from "react";
-import { View, ActivityIndicator, Text } from "react-native";
-import firebase from "firebase";
+import {
+  View,
+  ActivityIndicator,
+  Text,
+  AsyncStorage,
+  StyleSheet
+} from "react-native";
+import { http } from "../../Service/auth";
 
 export default class Loading extends Component {
   constructor(props) {
     super(props);
-
+    console.ignoredYellowBox = [427527];
     this.state = {};
   }
 
@@ -13,23 +19,41 @@ export default class Loading extends Component {
     this.checkLogin();
   }
 
-  checkLogin() {
-    firebase.auth().onAuthStateChanged(
-      function(user) {
-        if (user) {
-          this.props.navigation.navigate("dashboard");
-        } else {
-          this.props.navigation.navigate("login");
-        }
-      }.bind(this)
-    );
-  }
+  checkLogin = async () => {
+    let resultado = "login";
+
+    try {
+      const response = await http.get("listaFornecedor");
+
+      if (response.status === 200) {
+        this.props.navigation.navigate("Principal");
+      }
+      this.props.navigation.navigate("login");
+    } catch (e) {
+      this.props.navigation.navigate("login");
+      console.log(e);
+    }
+
+    //resultado = "Principal";
+  };
 
   render() {
     return (
-      <View>
-        <Text>Oi</Text>
+      <View style={[styles.container, styles.horizontal]}>
+        <ActivityIndicator size="large" color="#FF6700" />
       </View>
     );
   }
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center"
+  },
+  horizontal: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    padding: 10
+  }
+});

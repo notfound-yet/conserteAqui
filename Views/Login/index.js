@@ -4,9 +4,11 @@ import {
   Text,
   View,
   TextInput,
-  KeyboardAvoidingView
+  KeyboardAvoidingView,
+  AsyncStorage
 } from "react-native";
 import { Image, Button } from "react-native-elements";
+import { http } from "../../Service/auth";
 // import { Container } from './styles';
 
 export default class Login extends Component {
@@ -15,7 +17,9 @@ export default class Login extends Component {
 
     this.state = {
       loading: false,
-      text: ""
+      text: "",
+      login: "",
+      senha: ""
     };
   }
 
@@ -23,6 +27,27 @@ export default class Login extends Component {
 
   static navigationOptions = {
     header: null
+  };
+
+  fazerLogin = async () => {
+    try {
+      const response = await http.post("login", {
+        login: this.state.login,
+        password: this.state.senha
+      });
+      console.log(response.data);
+      if (response.status === 200) {
+        const { token, usuario } = response.data;
+        const { nivel } = usuario;
+
+        await AsyncStorage.setItem("nivel", nivel);
+        await AsyncStorage.setItem("token", token);
+        await AsyncStorage.setItem("usuario", JSON.stringify(usuario));
+        this.mudarRota("Principal");
+      }
+    } catch (e) {
+      console.log(e);
+    }
   };
 
   mudarRota = rota => {
@@ -42,20 +67,20 @@ export default class Login extends Component {
         >
           <Image
             style={{ width: 260, height: 160 }}
-            source={require("./assets/Design.png")}
+            source={require("../../assets/Design.png")}
           />
           <View>
             <TextInput
               style={styles.inputLogin}
               placeholder="Login"
-              onChangeText={text => this.setState({ text })}
-              value={this.state.text}
+              onChangeText={text => this.setState({ login: text })}
+              value={this.state.login}
             />
             <TextInput
               style={styles.inputLogin}
               placeholder="Senha"
-              onChangeText={text => this.setState({ text })}
-              value={this.state.text}
+              onChangeText={text => this.setState({ senha: text })}
+              value={this.state.senha}
             />
             <Button
               buttonStyle={{
@@ -66,7 +91,7 @@ export default class Login extends Component {
               }}
               titleStyle={{ fontSize: 21 }}
               title="Login"
-              onPress={() => this.mudarRota("Principal")}
+              onPress={() => this.fazerLogin()}
             />
             <Button
               buttonStyle={{
@@ -79,6 +104,7 @@ export default class Login extends Component {
               titleStyle={{ fontSize: 21, color: "#FF6700" }}
               type="outline"
               title="Criar Conta"
+              onPress={() => this.mudarRota("Criar")}
             />
           </View>
         </View>
